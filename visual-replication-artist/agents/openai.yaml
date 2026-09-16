@@ -1,0 +1,4 @@
+interface:
+  display_name: "视觉复刻师"
+  short_description: "拆解海报并规划可替换主体、环境与动作，整理下一步生图包"
+  default_prompt: "Use $visual-replication-artist to deconstruct this poster, propose compatible subject, environment, and action replacements, and prepare my next image-generation package; my own material image is optional."

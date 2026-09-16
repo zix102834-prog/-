@@ -1,0 +1,11 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+__pycache__/
+*.py[cod]
+.idea/
+.vscode/
+output/
+outputs/
+generated_images/
+*.tmp
