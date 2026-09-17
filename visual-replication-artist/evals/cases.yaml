@@ -1,0 +1,52 @@
+version: "1.0"
+cases:
+  - id: analysis-only-preserves-source
+    request: "只拆解这张海报并生成标注图，不要给迁移方案。"
+    expected_run_mode: analysis-only
+    must:
+      - "原图完整、未裁切、未重绘"
+      - "标注位于扩展画布或非破坏性覆盖层"
+    must_not:
+      - "主体、场景和动作候选"
+      - "生成迁移成品"
+
+  - id: explore-without-material
+    request: "拆解这张食品海报，素材图没有，请给可迁移方向。"
+    expected_run_mode: migration-planning
+    expected_planning_mode: explore
+    must:
+      - "素材图缺失不阻塞"
+      - "开放类别各有3到5个有实质差异的选项"
+      - "完整方向有2到3个"
+    must_not:
+      - "复制来源文案、徽章、品牌或水印"
+
+  - id: finalize-fixed-direction
+    request: "主体固定为热蜂蜜脆鸡堡，场景固定为深可可摄影棚，动作固定为铜壶浇蜜，直接给最终提示词。"
+    expected_run_mode: migration-planning
+    expected_planning_mode: finalize
+    must:
+      - "只输出一个完整方向"
+      - "固定主体、场景和动作保持不变"
+      - "包含正向提示词和负面提示词"
+    must_not:
+      - "额外扩展3到5个无关主体"
+
+  - id: generate-now-review
+    request: "按确认的迁移提示词直接生成海报。"
+    expected_run_mode: generate-now
+    expected_planning_mode: finalize
+    must:
+      - "调用可用图像生成能力"
+      - "生成后检查主体、层级、文字和来源排除项"
+    must_not:
+      - "未经检查直接交付"
+
+  - id: conditional-headline-rule
+    request: "拆解一张没有文字的水彩人物插画并给迁移方案。"
+    expected_run_mode: migration-planning
+    must:
+      - "根据人物关系、层次和色彩提取结构"
+    must_not:
+      - "强制添加左上大标题"
+      - "强制使用修饰词小、卖点字大的餐饮规则"

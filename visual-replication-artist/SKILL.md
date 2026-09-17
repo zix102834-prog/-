@@ -1,15 +1,23 @@
 ---
 name: visual-replication-artist
-description: Inspect a reference poster, create an annotated visual deconstruction, propose compatible replacements for subject, environment, and action, and prepare an image-generation package with an optional user material image. Use for 海报拆解、视觉复刻、主体替换、场景迁移 or prompt preparation; the user performs the final image generation and this skill does not build teaching HTML.
+description: Inspect a reference poster, create a pixel-preserving annotated deconstruction, propose compatible replacements for subject, environment, and action, and optionally generate the migrated image when explicitly requested. Use for 海报拆解、视觉复刻、主体替换、场景迁移 or migration-prompt preparation; do not use it to copy source identity or build teaching HTML.
 ---
 
 # 视觉复刻师
 
 Turn a reference poster into a clear, testable visual specification, an annotated deconstruction image, and a user-ready visual-replication package.
 
-Use this workflow:
+## Choose the run mode
 
-`INSPECT -> DECONSTRUCT -> ANNOTATE -> DELEGATE REPLACEMENT PROMPTS -> REVIEW -> PREPARE GENERATION KIT -> USER GENERATES`
+Select the smallest mode that satisfies the request. Record it as `run_mode` in the handoff YAML.
+
+- `analysis-only`: inspect, deconstruct, and create the annotated analysis image. Do not generate replacement options unless requested.
+- `migration-planning`: complete the analysis, replacement planning, specialist review, and generation kit. This is the default for requests about visual replication or prompt preparation.
+- `generate-now`: run `migration-planning`, then call an available image-generation skill only when the user explicitly asks for the migrated image. Inspect the result for subject, hierarchy, text accuracy, exclusions, and structural fidelity before delivery.
+
+Do not force the full workflow onto a narrower request. The complete planning workflow is:
+
+`INSPECT -> DECONSTRUCT -> ANNOTATE -> DELEGATE REPLACEMENT PROMPTS -> REVIEW -> PREPARE GENERATION KIT -> USER GENERATES OR GENERATE-NOW`
 
 “Visual replication” means transferring observable relationships such as hierarchy, composition, colour roles, material, and reading order. It does not mean copying source identity, wording, logos, signature characters, or branded objects.
 
@@ -36,6 +44,8 @@ Make exclusions source-specific. Cover applicable subjects, people or characters
 
 When requested, create one explanation image that shows the full reference poster uncropped and annotates only the relationships needed to understand it.
 
+Treat the reference as immutable evidence. Preserve its pixels, crop, aspect ratio, text, products, people, logos, and watermark exactly as supplied. Build the analysis board by placing the unchanged reference on a larger canvas or by adding a non-destructive overlay. Never ask a generative image model to redraw, reconstruct, restyle, clean up, translate, or extend the reference inside the analysis image. If deterministic compositing or annotation tools are unavailable, deliver the textual/YAML analysis and clearly state that the annotated image could not be produced safely.
+
 - Mark three to five major composition zones.
 - Show the eye path and hierarchy levels.
 - Summarise dominant, supporting, accent, and background colour roles.
@@ -44,6 +54,7 @@ When requested, create one explanation image that shows the full reference poste
 - Place labels beside their evidence and avoid covering the core subject.
 - Keep text concise and legible; do not turn the board into an article.
 - Clearly label the output as analysis. It is a structure guide, not the primary style reference for future image generation.
+- Verify before delivery that the embedded reference is pixel-identical or visually unchanged and that no annotation covers critical evidence.
 
 ## Delegate to the replacement-prompt specialist
 
@@ -55,6 +66,7 @@ Pass only:
 - the user's fixed choices and constraints;
 - a factual description of any optional user material image;
 - the required output language and aspect ratio.
+- the selected `planning_mode`: `explore`, `refine`, or `finalize`.
 
 Do not pass unrelated conversation history, hidden conclusions, or an answer the subagent is expected to imitate. The subagent must derive its proposals from the recorded visual anchors rather than re-analysing an image it has not inspected.
 
@@ -64,9 +76,13 @@ If collaboration tools are unavailable, perform the same specialist contract loc
 
 ## Propose replaceable content
 
-After the deconstruction image is complete, explain what may change without breaking the extracted visual system. Do not offer random substitutions. Derive every option from the reference poster's visual mass, silhouette, direction, depth, contrast, and story role.
+After the deconstruction image is complete, explain what may change without breaking the extracted visual system. Do not offer random substitutions. Derive every option from the reference poster's visual mass, silhouette, direction, depth, contrast, and story role. Match the amount of ideation to the selected planning mode:
 
-Provide three groups:
+- `explore`: the direction is open; propose three to five options in each open category and two or three coherent combinations.
+- `refine`: one or two categories are fixed; preserve them and propose three to five meaningful treatments only for the remaining open category or categories.
+- `finalize`: subject, environment, and action/state are fixed; produce one complete direction and its prompts without unnecessary alternatives.
+
+When `planning_mode: explore`, provide three groups:
 
 ### Replaceable subject
 
@@ -85,7 +101,7 @@ Suggest three to five settings that preserve the useful spatial and lighting rel
 
 Suggest three to five actions, poses, interactions, arrangements, or product states that fit the original eye path and movement. For a static product, “action” may mean pouring, steaming, opening, scattering, stacking, being held, being served, or another visible state change.
 
-Then propose two or three coherent combinations of `subject + environment + action/state`. Avoid incompatible mix-and-match lists. If the user has already chosen one category, keep that choice fixed and vary only the missing categories.
+Then propose two or three coherent combinations of `subject + environment + action/state`. Avoid incompatible mix-and-match lists. In `refine` or `finalize`, follow the scoped counts above rather than padding the response to satisfy exploratory counts.
 
 ## Prepare the generation kit
 
@@ -114,11 +130,11 @@ Also provide a concise prompt diff with `preserved`, `changed`, `added`, and `re
 
 Do not tell the user to generate until the original image, deconstruction image, and confirmed prompt are present and clearly assigned. A user material image is optional and its absence must not block the workflow. If no material image is supplied, make the prompt's subject description specific enough to control identity, shape, material, colour, and distinguishing details. If the replacement direction is still open, present the coherent combinations and ask the user to choose before finalising the prompt.
 
-When ready, tell the user to take the **original image + deconstruction image + confirmed prompt**, plus **their own material image when available**, into the next image-generation step and generate the visual-replication image. Do not call image generation by default; only generate inside this skill when the user separately and explicitly asks.
+When ready, tell the user to take the **original image + deconstruction image + confirmed prompt**, plus **their own material image when available**, into the next image-generation step. In `generate-now`, use those same labelled inputs with the available image-generation skill and validate the output. Never treat an explicit request to analyse or plan as permission to generate.
 
 ## Handoff boundary
 
-Deliver the YAML analysis, annotated image, replacement options, generation kit, and final or suggested prompt. Stop at `awaiting_user_generation` unless the user explicitly requests generation. Do not build the ten-chapter teaching HTML in this skill. After the user generates and selects a migrated poster, hand the completed comparison to `$show-poster`.
+Deliver only the artifacts required by the selected run mode. Stop at `awaiting_user_generation` unless the user explicitly requests `generate-now`. Do not build teaching HTML in this skill. If a separate `$show-poster` skill is installed, the user may optionally continue there after selecting a migrated poster; its absence must never block or degrade this skill.
 
 ## Poster Show reference set
 
@@ -135,9 +151,9 @@ The examples teach this role split:
 
 > **结构可以继承，内容必须重新设计。**
 
-### Strong headline hierarchy rule
+### Conditional headline hierarchy rule
 
-In this reference system, the upper-left headline is the first visual entry point. Its characters must not be equal in size, weight, or emphasis.
+Apply this rule only when the inspected reference itself uses strong internal headline contrast. Do not impose it on text-free visuals, editorial systems with uniform typography, character illustrations, or references whose hierarchy is created by another device. In this food-poster example, the upper-left headline is the first visual entry point and its characters are intentionally unequal in size, weight, and emphasis.
 
 - Prefixes, attributes, and process terms such as `山野`, `牛肉`, `慢炖`, or `炭火` stay smaller.
 - The core sensory selling-point character such as `鲜`, `香`, `酥`, `嫩`, or `浓` becomes the largest element.
@@ -168,21 +184,24 @@ The final image must retain the material image's scene, action, and composition.
 
 ## Completion check
 
+- [ ] The selected `run_mode` and `planning_mode` match the user's request and fixed choices.
 - [ ] The full reference was inspected and remains uncropped in the analysis image.
+- [ ] The analysis image preserves the reference without generative redrawing or textual mutation.
 - [ ] Each core anchor is visible, relational, and testable.
 - [ ] Observation and interpretation are distinguished.
 - [ ] Source-specific identity and wording are listed as exclusions.
 - [ ] Composition, hierarchy, colour, copy, material/depth, and eye path are covered.
 - [ ] The annotated image is legible, concise, and does not obscure the evidence.
 - [ ] The transferable formula preserves visual logic without preserving source identity.
-- [ ] Replacement options cover subject, environment, and action/state and explain why they fit.
+- [ ] Replacement-option counts match `explore`, `refine`, or `finalize` rather than being padded.
 - [ ] The replacement-prompt specialist was delegated when collaboration tools were available, and the main agent reviewed its proposals.
 - [ ] Each proposed subject, environment, and action/state includes a standalone prompt the user can copy or combine.
-- [ ] Two or three coherent replacement combinations are provided when the direction is still open.
+- [ ] Two or three coherent replacement combinations are provided only when the direction is still open.
 - [ ] The selected migration prompt specifies subject, environment, action/state, copy, and output constraints.
 - [ ] The three required generation inputs are present and labelled: original, deconstruction image, and confirmed prompt.
 - [ ] A user material image is included and labelled when supplied, but its absence does not block generation.
 - [ ] Without a material image, the prompt defines the new subject's identity and distinguishing visual details precisely.
 - [ ] The user is clearly told which required inputs and optional material image to use in the next image-generation step.
 - [ ] The skill stops at `awaiting_user_generation` unless the user explicitly requests generation.
+- [ ] In `generate-now`, the generated output was inspected for text accuracy, exclusions, hierarchy, and structural fidelity.
 - [ ] No teaching HTML was created by this skill.

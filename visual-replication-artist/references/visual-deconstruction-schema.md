@@ -1,9 +1,11 @@
 # Visual Replication Handoff Contract
 
-Maintain this YAML document from inspection through the user's next image-generation handoff. It becomes the input for `$show-poster` after the user returns with a selected migrated image.
+Maintain this YAML document from inspection through the user's next image-generation handoff. A separate Poster Show workflow may consume it when available, but that integration is optional.
 
 ```yaml
-schema_version: "1.0"
+schema_version: "1.1"
+run_mode: migration-planning # analysis-only | migration-planning | generate-now
+planning_mode: explore # explore | refine | finalize
 stage: deconstruct
 
 style_summary: ""
@@ -89,6 +91,11 @@ prompt_diff:
 artifacts:
   reference_image: ""
   deconstruction_image: ""
+  reference_integrity:
+    composition_method: deterministic-overlay # deterministic-overlay | side-by-side-canvas | unavailable
+    original_pixels_preserved: false
+    original_crop_preserved: false
+    original_text_preserved: false
   user_material_images: []
 
 generation_kit:
@@ -113,6 +120,18 @@ specialist_run:
     prompts_are_standalone: false
     combinations_are_coherent: false
     notes: []
+
+generation_run:
+  requested: false
+  status: not_run # not_run | complete | blocked
+  output_image: ""
+  review:
+    subject_correct: false
+    hierarchy_preserved: false
+    text_accurate: false
+    exclusions_respected: false
+    source_identity_not_copied: false
+    notes: []
 ```
 
 ## Field rules
@@ -131,9 +150,18 @@ Use stable IDs and source-specific descriptions. Cover applicable subject, perso
 
 Keep each value concise enough for a visual annotation board. Prefer three to five zones, hierarchy levels, colour roles, copy roles, or depth layers rather than long prose.
 
+### `run_mode` and `planning_mode`
+
+- `analysis-only` stops after deconstruction and deterministic annotation.
+- `migration-planning` prepares replacement proposals and the generation kit.
+- `generate-now` additionally generates and reviews the migrated image after an explicit user request.
+- `explore` uses three to five options per open category and two or three complete directions.
+- `refine` varies only categories that remain open.
+- `finalize` produces one complete direction when all three migration choices are fixed.
+
 ### `replacement_options`
 
-Offer three to five grounded options per open category, then combine them into two or three internally coherent directions. Every option needs a visible fit reason tied to composition, silhouette, visual weight, movement, depth, light, or colour relationships.
+In `explore`, offer three to five grounded options per open category, then combine them into two or three internally coherent directions. In `refine`, preserve fixed choices and vary only open categories. In `finalize`, record one complete direction. Every option needs a visible fit reason tied to composition, silhouette, visual weight, movement, depth, light, or colour relationships.
 
 ### `migration_inputs` and prompts
 
@@ -146,6 +174,8 @@ Fill these fields only with the user's chosen direction or clearly label the res
 - `user_material_images` contains the user's own reference images for the new subject when supplied; it may remain empty.
 
 The reference and deconstruction image paths must exist before the generation kit is marked ready. User material images are optional.
+
+`reference_integrity` must prove that the analysis image used deterministic compositing or a side-by-side canvas and did not regenerate, crop, rewrite, or clean the source. If such compositing is unavailable, set `composition_method: unavailable`, leave the three checks false, and do not claim an annotated image was safely completed.
 
 ### `generation_kit`
 
@@ -164,6 +194,8 @@ Use:
 - `propose_replacements` while generating subject, environment, and action/state options;
 - `prepare_generation_kit` while finalising the four inputs;
 - `awaiting_user_generation` after the complete package is handed to the user.
+- `generate` while fulfilling an explicit `generate-now` request;
+- `complete` after the generated output passes review.
 
 ## Ready-for-generation gate
 
@@ -172,6 +204,7 @@ Use:
 - Source-specific exclusions cover identity, copy, place, and premise where applicable.
 - Composition, hierarchy, colour, copy, material/depth, eye path, and transferable formula are recorded.
 - The annotated deconstruction image exists, is legible, and shows the complete reference uncropped.
+- The annotated image preserves original pixels, crop, and text through deterministic compositing.
 - Subject, environment, and action/state replacement options are grounded in the extracted visual system.
 - A coherent replacement direction has been selected.
 - The migration prompt and source-specific negative prompt are complete.
@@ -180,3 +213,4 @@ Use:
 - The three required input roles and the optional material-image role are labelled, and `generation_kit.ready` is `true`.
 - The user is told to use the required inputs and include their material image when available.
 - The specialist run is complete, and every main-agent review field is `true` before a direction is presented as ready to use.
+- In `generate-now`, the generation run is complete and every applicable review field is `true`.
