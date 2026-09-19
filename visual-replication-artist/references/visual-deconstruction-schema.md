@@ -93,6 +93,10 @@ artifacts:
   deconstruction_image: ""
   reference_integrity:
     composition_method: deterministic-overlay # deterministic-overlay | side-by-side-canvas | unavailable
+    report_path: ""
+    source_pixel_sha256: ""
+    embedded_pixel_sha256: ""
+    pixel_integrity_exact: false
     original_pixels_preserved: false
     original_crop_preserved: false
     original_text_preserved: false
@@ -150,19 +154,6 @@ Use stable IDs and source-specific descriptions. Cover applicable subject, perso
 
 Keep each value concise enough for a visual annotation board. Prefer three to five zones, hierarchy levels, colour roles, copy roles, or depth layers rather than long prose.
 
-### `run_mode` and `planning_mode`
-
-- `analysis-only` stops after deconstruction and deterministic annotation.
-- `migration-planning` prepares replacement proposals and the generation kit.
-- `generate-now` additionally generates and reviews the migrated image after an explicit user request.
-- `explore` uses three to five options per open category and two or three complete directions.
-- `refine` varies only categories that remain open.
-- `finalize` produces one complete direction when all three migration choices are fixed.
-
-### `replacement_options`
-
-In `explore`, offer three to five grounded options per open category, then combine them into two or three internally coherent directions. In `refine`, preserve fixed choices and vary only open categories. In `finalize`, record one complete direction. Every option needs a visible fit reason tied to composition, silhouette, visual weight, movement, depth, light, or colour relationships.
-
 ### `migration_inputs` and prompts
 
 Fill these fields only with the user's chosen direction or clearly label the result as a suggestion. The prompt must specify the new subject, environment, action/state, copy, format, visual relationships, and exclusions. Set `prompt_status` to `confirmed` only after the user confirms or directly supplies the prompt.
@@ -173,9 +164,7 @@ Fill these fields only with the user's chosen direction or clearly label the res
 - `deconstruction_image` points to the completed annotated analysis image.
 - `user_material_images` contains the user's own reference images for the new subject when supplied; it may remain empty.
 
-The reference and deconstruction image paths must exist before the generation kit is marked ready. User material images are optional.
-
-`reference_integrity` must prove that the analysis image used deterministic compositing or a side-by-side canvas and did not regenerate, crop, rewrite, or clean the source. If such compositing is unavailable, set `composition_method: unavailable`, leave the three checks false, and do not claim an annotated image was safely completed.
+The reference and deconstruction image paths must exist before the generation kit is marked ready. User material images are optional. For a script-generated board, copy the integrity report path and hashes into `reference_integrity`; set all integrity booleans true only when the report shows matching hashes, original dimensions, and no annotation overlap. If deterministic compositing is unavailable or verification fails, set `composition_method: unavailable`, leave the checks false, and do not claim the board was safely completed.
 
 ### `generation_kit`
 
@@ -197,20 +186,6 @@ Use:
 - `generate` while fulfilling an explicit `generate-now` request;
 - `complete` after the generated output passes review.
 
-## Ready-for-generation gate
+## Ready-state invariant
 
-- The reference image has been inspected.
-- Core anchors are observable and testable.
-- Source-specific exclusions cover identity, copy, place, and premise where applicable.
-- Composition, hierarchy, colour, copy, material/depth, eye path, and transferable formula are recorded.
-- The annotated deconstruction image exists, is legible, and shows the complete reference uncropped.
-- The annotated image preserves original pixels, crop, and text through deterministic compositing.
-- Subject, environment, and action/state replacement options are grounded in the extracted visual system.
-- A coherent replacement direction has been selected.
-- The migration prompt and source-specific negative prompt are complete.
-- If no user material image is present, the prompt specifies the new subject's identity, shape, material, colour, and distinguishing details.
-- Prompt differences are grouped as preserved, changed, added, and removed.
-- The three required input roles and the optional material-image role are labelled, and `generation_kit.ready` is `true`.
-- The user is told to use the required inputs and include their material image when available.
-- The specialist run is complete, and every main-agent review field is `true` before a direction is presented as ready to use.
-- In `generate-now`, the generation run is complete and every applicable review field is `true`.
+Set `generation_kit.ready: true` only when the original and verified board paths exist, a coherent direction and confirmed prompt are recorded, required/optional input roles are labelled, and the specialist review fields pass. In `generate-now`, set `stage: complete` only after all applicable generation-review fields pass.
